@@ -1,6 +1,6 @@
-#define BLYNK_TEMPLATE_ID "TMPL2ktL8SxMi"
-#define BLYNK_TEMPLATE_NAME "IOT based Flood monitoring and alerting system"
-#define BLYNK_AUTH_TOKEN "H_3m_CxaFKqoWE1HywRwETVN0B6ZHtY_"
+#define BLYNK_TEMPLATE_ID "TMPL2vl75P_4r"
+#define BLYNK_TEMPLATE_NAME "Flood Monitoring and Alerting System"
+#define BLYNK_AUTH_TOKEN "FSZzs9tNK7ULYPSCJIurPR_92ijdJCx7"
 
 #define BLYNK_PRINT Serial
 #include <ESP8266WiFi.h>
@@ -15,17 +15,29 @@ long duration;
 int distance;
 
 #define relay D7
+#define relay2 D0
 #define  greenLed D3
 #define  redled D4
 #define  buzzer D8
 
 // You should get Auth Token in the Blynk App.
 char auth[] = BLYNK_AUTH_TOKEN;
-char ssid[] = "isma";   // your ssid 
-char pass[] = "simad123"; // your pass
+char ssid[] = "Isma";   // your ssid 
+char pass[] = "Simad123"; // your pass
 
 BlynkTimer timer;
+
 #define VPIN_BUTTON_1    V4
+
+BLYNK_WRITE(VPIN_BUTTON_1) {
+  int toggleState_1 = param.asInt();
+  if(toggleState_1 == 1){
+digitalWrite(relay,LOW);
+  }
+  else { 
+digitalWrite(relay,HIGH);
+  }
+}
 
 
 void setup()
@@ -36,19 +48,19 @@ void setup()
   Serial.begin(9600);
   Blynk.begin(auth, ssid, pass);
 
-    lcd.begin();
+   lcd.init();  
 //  lcd.init();
   lcd.backlight();
   lcd.clear();
   lcd.setCursor(0,0);
-  lcd.print("Float Detection");
+  lcd.print("Flood Monitoring");
  pinMode(relay,OUTPUT);
+ pinMode(relay2,OUTPUT);
  pinMode(redled,OUTPUT);
  pinMode(greenLed,OUTPUT);
  pinMode(buzzer,OUTPUT);
-
+digitalWrite(relay,HIGH);
   // Setup a function to be called every second
-  timer.setInterval(100L, LevalSen);
   timer.setInterval(100L, sendSensor);
 }
 
@@ -75,63 +87,41 @@ void sendSensor()
   Blynk.virtualWrite(V0, distance); 
 
 
-  if(distance>=15 && distance<25){
-  //digitalWrite(relay,HIGH);
+  if(distance<=18 && distance>=14){
   digitalWrite(greenLed,HIGH);
   digitalWrite(redled,LOW);
     lcd.setCursor(0,1);
-  lcd.print("F: LOW  ");
+  lcd.print("0%");
   digitalWrite(buzzer,LOW);
 delay(100);
 }// O %
 
-else if(distance<=15 && distance>=6){
+else if(distance<=13 && distance>=10){
     digitalWrite(greenLed,HIGH);
    digitalWrite(redled,LOW);
      digitalWrite(buzzer,LOW);
     lcd.setCursor(0,1);
-  lcd.print("F:Mediun");
+    lcd.print("50%");
  delay(100);
 }//40%
 
- else if(distance>=2 &&  distance<6 ){
-  digitalWrite(relay,LOW);
+ else if(distance<=9 &&  distance>=6 ){
     digitalWrite(greenLed,LOW);
    digitalWrite(redled,HIGH);
     digitalWrite(buzzer,HIGH);
     lcd.setCursor(0,1);
-     lcd.print("F: HIGH  ");
+  lcd.print("100%");
   delay(100);
+digitalWrite(relay2,LOW);
 
 }//100%
 
 else{
     lcd.setCursor(0,1);
-  lcd.print(" WELL ");
+  lcd.print("    ") ;
   digitalWrite(greenLed,HIGH);
    digitalWrite(redled,LOW);
-     digitalWrite(buzzer,LOW); 
+     digitalWrite(buzzer,HIGH); 
+     digitalWrite(relay2,HIGH);
 }
-}
-
-void LevalSen(){
-     int value = analogRead(A0);
-     Blynk.virtualWrite(V1, value);
-   lcd.setCursor(9,1);
-  lcd.print("Lev ");
-  lcd.setCursor(13,1);
-  lcd.print(value);
-
-}
-
-BLYNK_WRITE(VPIN_BUTTON_1) {
-  int toggleState_1 = param.asInt();
-  if(toggleState_1 == 1){
-    digitalWrite(relay, HIGH);
-   // Blynk.virtualWrite(V1, HIGH);    
-  }
-  else { 
-    digitalWrite(relay, LOW);
-   // Blynk.virtualWrite(V1, LOW);
-  }
 }
